@@ -120,7 +120,7 @@ class AuraConnection:
                 
                 for meeting_id, meetings in data.items():
                     for meeting in meetings:
-                        # Create Meeting node
+                        # Create Meeting node with tags
                         meeting_query = """
                         CREATE (m:Meeting {
                             id: $meeting_id,
@@ -130,10 +130,14 @@ class AuraConnection:
                             date: $date,
                             host: $host,
                             documenter: $documenter,
-                            purpose: $purpose
+                            purpose: $purpose,
+                            topics_covered: $topics_covered,
+                            emotions: $emotions
                         })
                         """
                         meeting_info = meeting['meetingInfo']
+                        tags = meeting.get('tags', {})
+                        
                         session.run(meeting_query, {
                             'meeting_id': meeting_id,
                             'workgroup': meeting['workgroup'],
@@ -142,8 +146,44 @@ class AuraConnection:
                             'date': meeting_info['date'],
                             'host': meeting_info['host'],
                             'documenter': meeting_info['documenter'],
-                            'purpose': meeting_info['purpose']
+                            'purpose': meeting_info['purpose'],
+                            'topics_covered': tags.get('topicsCovered', ''),
+                            'emotions': tags.get('emotions', '')
                         })
+                        
+                        # Create Topic nodes and relationships
+                        topics_query = """
+                        MATCH (m:Meeting {id: $meeting_id})
+                        WITH m
+                        UNWIND split($topics, ',') AS topic
+                        WITH m, trim(topic) AS clean_topic
+                        WHERE clean_topic <> ''
+                        MERGE (t:Topic {name: clean_topic})
+                        CREATE (m)-[:COVERS_TOPIC]->(t)
+                        """
+                        
+                        if tags.get('topicsCovered'):
+                            session.run(topics_query, {
+                                'meeting_id': meeting_id,
+                                'topics': tags['topicsCovered']
+                            })
+                        
+                        # Create Emotion nodes and relationships
+                        emotions_query = """
+                        MATCH (m:Meeting {id: $meeting_id})
+                        WITH m
+                        UNWIND split($emotions, ',') AS emotion
+                        WITH m, trim(emotion) AS clean_emotion
+                        WHERE clean_emotion <> ''
+                        MERGE (e:Emotion {name: clean_emotion})
+                        CREATE (m)-[:HAS_EMOTION]->(e)
+                        """
+                        
+                        if tags.get('emotions'):
+                            session.run(emotions_query, {
+                                'meeting_id': meeting_id,
+                                'emotions': tags['emotions']
+                            })
                         
                         # Create Participant nodes and relationships
                         participants_query = """
@@ -245,7 +285,7 @@ class AuraConnection:
                                 'actions': all_actions
                             })
                 
-                self.logger.info(f"Successfully imported meeting data from {json_file_path}")
+                self.logger.info(f"Successfully imported meeting data with tags from {json_file_path}")
                 return True
                 
         except Exception as e:
