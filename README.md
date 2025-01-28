@@ -2,7 +2,13 @@
 
 ## Overview
 
-This utility imports SingularityNET meeting data into a Neo4j Aura graph database, creating a queryable graph structure of meetings, participants, documents, and action items. It uses the `AuraConnection` class to manage Neo4j connections and data import.
+This utility imports SingularityNET meeting data into a Neo4j Aura graph database, creating a queryable graph structure of meetings, participants, documents, and action items.
+
+## Data Model Visualization
+
+![Graph Data Model](graph-model.png)
+
+*Figure 1: Graph model showing relationships between Meetings, People, Documents, and Action Items*
 
 ---
 
