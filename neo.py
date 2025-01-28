@@ -1,8 +1,9 @@
 from neo4j import GraphDatabase
 import logging
-from typing import Optional
+from typing import Optional, Dict, Any
 import os
 from dotenv import load_dotenv
+import json
 
 class AuraConnection:
     def __init__(self):
@@ -105,6 +106,115 @@ class AuraConnection:
             self.logger.error(f"Query execution failed: {str(e)}")
             raise
 
+    def import_json_data(self, json_file_path: str) -> bool:
+        """
+        Import SingularityNET meeting data from JSON file into Neo4j
+        
+        Args:
+            json_file_path: Path to the JSON file
+            
+        Returns:
+            bool: True if import successful, False otherwise
+        """
+        try:
+            # Debug: Print file path and check existence
+            full_path = os.path.abspath(json_file_path)
+            print(f"Attempting to read JSON from: {full_path}")
+            print(f"File exists: {os.path.exists(json_file_path)}")
+            
+            # Read JSON file
+            with open(json_file_path, 'r') as file:
+                data = json.load(file)
+            
+            with self.driver.session() as session:
+                # First, clear existing data (optional)
+                session.run("MATCH (n) DETACH DELETE n")
+                
+                # For each meeting entry in the JSON
+                for meeting_id, meetings in data.items():
+                    for meeting in meetings:
+                        # Create Meeting node
+                        meeting_query = """
+                        CREATE (m:Meeting {
+                            id: $meeting_id,
+                            workgroup: $workgroup,
+                            workgroup_id: $workgroup_id,
+                            name: $name,
+                            date: $date,
+                            host: $host,
+                            documenter: $documenter,
+                            purpose: $purpose
+                        })
+                        """
+                        meeting_info = meeting['meetingInfo']
+                        session.run(meeting_query, {
+                            'meeting_id': meeting_id,
+                            'workgroup': meeting['workgroup'],
+                            'workgroup_id': meeting['workgroup_id'],
+                            'name': meeting_info['name'],
+                            'date': meeting_info['date'],
+                            'host': meeting_info['host'],
+                            'documenter': meeting_info['documenter'],
+                            'purpose': meeting_info['purpose']
+                        })
+                        
+                        # Create Participant nodes and relationships
+                        participants_query = """
+                        MATCH (m:Meeting {id: $meeting_id})
+                        WITH m
+                        UNWIND $participants AS participant
+                        MERGE (p:Person {name: participant})
+                        CREATE (p)-[:ATTENDED]->(m)
+                        """
+                        participants = [p.strip() for p in meeting_info['peoplePresent'].split(',')]
+                        session.run(participants_query, {
+                            'meeting_id': meeting_id,
+                            'participants': participants
+                        })
+                        
+                        # Create Document nodes and relationships
+                        docs_query = """
+                        MATCH (m:Meeting {id: $meeting_id})
+                        WITH m
+                        UNWIND $docs AS doc
+                        CREATE (d:Document {
+                            title: doc.title,
+                            link: doc.link
+                        })
+                        CREATE (m)-[:HAS_DOCUMENT]->(d)
+                        """
+                        session.run(docs_query, {
+                            'meeting_id': meeting_id,
+                            'docs': meeting_info['workingDocs']
+                        })
+                        
+                        # Create Action Items
+                        actions_query = """
+                        MATCH (m:Meeting {id: $meeting_id})
+                        WITH m
+                        UNWIND $actions AS action
+                        CREATE (a:ActionItem {
+                            text: action.text,
+                            status: action.status,
+                            dueDate: action.dueDate
+                        })
+                        CREATE (m)-[:HAS_ACTION]->(a)
+                        WITH a, action
+                        MATCH (p:Person {name: action.assignee})
+                        CREATE (a)-[:ASSIGNED_TO]->(p)
+                        """
+                        session.run(actions_query, {
+                            'meeting_id': meeting_id,
+                            'actions': [a for a in meeting['agendaItems'][0]['actionItems'] if 'assignee' in a]
+                        })
+                
+                self.logger.info(f"Successfully imported meeting data from {json_file_path}")
+                return True
+                
+        except Exception as e:
+            self.logger.error(f"Failed to import JSON data: {str(e)}")
+            return False
+
 def main():
     # Set up logging
     logging.basicConfig(level=logging.INFO)
@@ -131,6 +241,13 @@ def main():
                     "MATCH (n) RETURN count(n) as node_count"
                 )
                 print(f"Number of nodes in database: {result[0]['node_count']}")
+                
+                # Import JSON data with explicit path
+                json_path = os.path.join(os.getcwd(), 'snet-data.json')
+                if aura.import_json_data(json_path):
+                    print("Successfully imported data from JSON!")
+                else:
+                    print("Failed to import data from JSON!")
             else:
                 print("Connection test failed!")
         else:

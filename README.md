@@ -1,146 +1,145 @@
-# AuraConnection: Neo4j Aura Python Utility
+# SingularityNET Meeting Data Graph Database
 
 ## Overview
 
-The `AuraConnection` class provides a Python utility for managing connections and executing Cypher queries on a **Neo4j Aura** instance. It simplifies tasks such as establishing a connection, testing connectivity, and running Cypher queries.
-
-This utility is designed to ensure secure, reliable, and efficient interaction with a Neo4j Aura database using the official Neo4j Python driver.
+This utility imports SingularityNET meeting data into a Neo4j Aura graph database, creating a queryable graph structure of meetings, participants, documents, and action items. It uses the `AuraConnection` class to manage Neo4j connections and data import.
 
 ---
 
 ## Features
 
-- **Environment Variable Configuration**: Securely loads connection credentials from a `.env` file.
-- **Logging**: Integrated logging for monitoring connection status and errors.
-- **Connection Pooling**: Optimized settings for Neo4j Aura instances.
-- **Query Execution**: Easily run Cypher queries and retrieve results.
-- **Error Handling**: Comprehensive error logging for troubleshooting.
+- **Meeting Data Import**: Converts JSON meeting data into a graph structure
+- **Graph Relationships**: Creates connections between meetings, people, documents, and tasks
+- **Environment Variable Configuration**: Securely loads Neo4j credentials from `.env`
+- **Error Handling**: Comprehensive error logging for troubleshooting
 
 ---
 
 ## Prerequisites
 
 - Python 3.8 or later
-- A **Neo4j Aura** database instance
-- The following Python libraries:
-  - `neo4j`
-  - `python-dotenv`
-
-Install dependencies using:
-```bash
-pip install neo4j python-dotenv
-```
+- Neo4j Aura database instance
+- Required Python packages:
+  ```bash
+  pip install neo4j python-dotenv
+  ```
 
 ---
 
 ## Setup
 
-1. **Clone the Repository**:
+1. **Clone and Configure**:
    ```bash
    git clone <repository-url>
    cd <repository-directory>
    ```
 
-2. **Create a `.env` File**:
-   Add your Neo4j Aura credentials in a `.env` file at the root of the project:
+2. **Create `.env` File**:
    ```ini
    NEO4J_URI=neo4j+s://<your-database-uri>
    NEO4J_USERNAME=neo4j
    NEO4J_PASSWORD=<your-password>
    ```
 
-3. **Run the Script**:
-   Execute the main script to connect to your database and test the connection:
-   ```bash
-   python <script_name>.py
+3. **Prepare Meeting Data**:
+   Place your meeting data in `snet-data.json` following this structure:
+   ```json
+   {
+       "meeting_id": [{
+           "workgroup": "Governance Workgroup",
+           "meetingInfo": {
+               "name": "Weekly",
+               "date": "2025-01-07",
+               "host": "Host Name",
+               "documenter": "Documenter Name",
+               "peoplePresent": "Person1, Person2, Person3",
+               "purpose": "Meeting Purpose",
+               "workingDocs": [
+                   {"title": "Doc Title", "link": "Doc URL"}
+               ]
+           },
+           "agendaItems": [
+               {
+                   "actionItems": [
+                       {
+                           "text": "Action Description",
+                           "assignee": "Person Name",
+                           "dueDate": "2025-01-14",
+                           "status": "todo"
+                       }
+                   ]
+               }
+           ]
+       }]
+   }
    ```
 
 ---
 
-## Code Usage
+## Graph Data Model
 
-### **Class: `AuraConnection`**
+### Nodes
+- **Meeting**: Contains meeting metadata (workgroup, date, host, etc.)
+- **Person**: Represents meeting participants
+- **Document**: Working documents referenced in meetings
+- **ActionItem**: Tasks assigned during meetings
 
-#### **Initialization**
-```python
-aura = AuraConnection()
+### Relationships
+- `(Person)-[:ATTENDED]->(Meeting)`
+- `(Meeting)-[:HAS_DOCUMENT]->(Document)`
+- `(Meeting)-[:HAS_ACTION]->(ActionItem)`
+- `(ActionItem)-[:ASSIGNED_TO]->(Person)`
+
+---
+
+## Usage
+
+Run the importer:
+```bash
+python neo.py
 ```
 
-#### **Methods**
-1. **`connect()`**: Establishes a connection to the Neo4j Aura database.
-   ```python
-   success = aura.connect()
-   ```
+### Example Queries
 
-2. **`close()`**: Closes the connection.
-   ```python
-   aura.close()
-   ```
+View all relationships:
+```cypher
+MATCH (n)-[r]->(m)
+RETURN n, r, m
+```
 
-3. **`test_connection()`**: Tests the connection with a basic query.
-   ```python
-   is_connected = aura.test_connection()
-   ```
+Show meetings and participants:
+```cypher
+MATCH (p:Person)-[:ATTENDED]->(m:Meeting)
+RETURN m.workgroup, m.date, collect(p.name) as participants
+```
 
-4. **`execute_query(query: str, parameters: dict = None)`**: Executes a Cypher query and returns the results.
-   ```python
-   query = "MATCH (n) RETURN count(n) as node_count"
-   result = aura.execute_query(query)
-   print(result)
-   ```
-
----
-
-## Example Workflow
-
-1. Initialize the `AuraConnection` class.
-2. Connect to the database using `connect()`.
-3. Verify the connection with `test_connection()`.
-4. Execute queries with `execute_query(query, parameters)`.
-5. Close the connection with `close()`.
-
-Example:
-```python
-aura = AuraConnection()
-
-try:
-    if aura.connect():
-        if aura.test_connection():
-            print("Connected to Neo4j Aura!")
-            result = aura.execute_query("MATCH (n) RETURN count(n) AS count")
-            print(f"Node count: {result[0]['count']}")
-finally:
-    aura.close()
+View action items and assignees:
+```cypher
+MATCH (m:Meeting)-[:HAS_ACTION]->(a:ActionItem)-[:ASSIGNED_TO]->(p:Person)
+RETURN m.date, a.text, p.name, a.status, a.dueDate
 ```
 
 ---
 
-## Environment Variables
-
-| Variable         | Description                       | Example                                     |
-|-------------------|-----------------------------------|---------------------------------------------|
-| `NEO4J_URI`       | Neo4j Aura connection URI        | `neo4j+s://<instance-id>.databases.neo4j.io` |
-| `NEO4J_USERNAME`  | Username for authentication      | `neo4j`                                    |
-| `NEO4J_PASSWORD`  | Password for authentication      | `<your-password>`                          |
-
----
-
-## Logging
-
-Logs are written to the console for monitoring connection status and errors. You can customize logging behavior by modifying the `logging.basicConfig()` settings.
+## Files
+- `neo.py`: Database connection and data import logic
+- `snet-data.json`: Source meeting data
+- `.env`: Neo4j credentials (not tracked in git)
+- `.gitignore`: Git ignore rules
 
 ---
 
 ## Notes
 
-- Ensure the `.env` file is included in `.gitignore` to prevent sensitive information from being exposed.
-- The script requires an active Neo4j Aura instance with valid credentials.
+- Ensure `.env` is in `.gitignore` to protect credentials
+- Meeting data should follow the specified JSON structure
+- Requires active Neo4j Aura instance
 
 ---
 
 ## License
 
-This project is licensed under the MIT License.
+MIT License
 
 ---
 

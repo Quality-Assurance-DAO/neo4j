@@ -1,0 +1,9 @@
+{
+    "nodes": [
+        {"id": "1", "name": "Node 1", "type": "Person"},
+        {"id": "2", "name": "Node 2", "type": "Company"}
+    ],
+    "relationships": [
+        {"source": "1", "target": "2", "type": "WORKS_AT"}
+    ]
+}
