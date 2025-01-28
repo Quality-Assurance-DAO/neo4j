@@ -109,28 +109,15 @@ class AuraConnection:
     def import_json_data(self, json_file_path: str) -> bool:
         """
         Import SingularityNET meeting data from JSON file into Neo4j
-        
-        Args:
-            json_file_path: Path to the JSON file
-            
-        Returns:
-            bool: True if import successful, False otherwise
         """
         try:
-            # Debug: Print file path and check existence
-            full_path = os.path.abspath(json_file_path)
-            print(f"Attempting to read JSON from: {full_path}")
-            print(f"File exists: {os.path.exists(json_file_path)}")
-            
-            # Read JSON file
             with open(json_file_path, 'r') as file:
                 data = json.load(file)
             
             with self.driver.session() as session:
-                # First, clear existing data (optional)
+                # First, clear existing data
                 session.run("MATCH (n) DETACH DELETE n")
                 
-                # For each meeting entry in the JSON
                 for meeting_id, meetings in data.items():
                     for meeting in meetings:
                         # Create Meeting node
@@ -188,7 +175,47 @@ class AuraConnection:
                             'docs': meeting_info['workingDocs']
                         })
                         
-                        # Create Action Items
+                        # Create Agenda Items and their components
+                        agenda_query = """
+                        MATCH (m:Meeting {id: $meeting_id})
+                        WITH m
+                        UNWIND $agenda_items AS item
+                        CREATE (a:AgendaItem {
+                            status: item.status,
+                            narrative: item.narrative
+                        })
+                        CREATE (m)-[:HAS_AGENDA_ITEM]->(a)
+                        
+                        // Create Discussion Points
+                        WITH a, item
+                        UNWIND item.discussionPoints AS point
+                        CREATE (d:DiscussionPoint {text: point})
+                        CREATE (a)-[:INCLUDES_DISCUSSION]->(d)
+                        
+                        // Create Decision Items
+                        WITH a, item
+                        UNWIND item.decisionItems AS decision
+                        CREATE (dec:Decision {
+                            decision: decision.decision,
+                            rationale: decision.rationale,
+                            opposing: decision.opposing,
+                            effect: decision.effect
+                        })
+                        CREATE (a)-[:MADE_DECISION]->(dec)
+                        """
+                        
+                        for agenda_item in meeting['agendaItems']:
+                            session.run(agenda_query, {
+                                'meeting_id': meeting_id,
+                                'agenda_items': [{
+                                    'status': agenda_item.get('status', ''),
+                                    'narrative': agenda_item.get('narrative', ''),
+                                    'discussionPoints': agenda_item.get('discussionPoints', []),
+                                    'decisionItems': agenda_item.get('decisionItems', [])
+                                }]
+                            })
+                        
+                        # Create Action Items with relationships
                         actions_query = """
                         MATCH (m:Meeting {id: $meeting_id})
                         WITH m
@@ -203,10 +230,20 @@ class AuraConnection:
                         MATCH (p:Person {name: action.assignee})
                         CREATE (a)-[:ASSIGNED_TO]->(p)
                         """
-                        session.run(actions_query, {
-                            'meeting_id': meeting_id,
-                            'actions': [a for a in meeting['agendaItems'][0]['actionItems'] if 'assignee' in a]
-                        })
+                        
+                        # Flatten action items from all agenda items
+                        all_actions = []
+                        for agenda_item in meeting['agendaItems']:
+                            all_actions.extend([
+                                action for action in agenda_item.get('actionItems', [])
+                                if 'assignee' in action
+                            ])
+                        
+                        if all_actions:
+                            session.run(actions_query, {
+                                'meeting_id': meeting_id,
+                                'actions': all_actions
+                            })
                 
                 self.logger.info(f"Successfully imported meeting data from {json_file_path}")
                 return True
