@@ -72,6 +72,8 @@ This utility imports SingularityNET meeting data into a Neo4j Aura graph databas
            },
            "agendaItems": [
                {
+                   "status": "carry over",
+                   "narrative": "Discussion narrative...",
                    "actionItems": [
                        {
                            "text": "Action Description",
@@ -79,9 +81,25 @@ This utility imports SingularityNET meeting data into a Neo4j Aura graph databas
                            "dueDate": "2025-01-14",
                            "status": "todo"
                        }
+                   ],
+                   "decisionItems": [
+                       {
+                           "decision": "Decision description",
+                           "rationale": "Reasoning behind decision",
+                           "opposing": "none",
+                           "effect": "affectsOnlyThisWorkgroup"
+                       }
+                   ],
+                   "discussionPoints": [
+                       "Point 1",
+                       "Point 2"
                    ]
                }
-           ]
+           ],
+           "tags": {
+               "topicsCovered": "Topic1, Topic2, Topic3",
+               "emotions": "Productive, Collaborative"
+           }
        }]
    }
    ```
