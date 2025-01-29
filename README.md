@@ -6,6 +6,37 @@
 [![License](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 [![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg?style=for-the-badge)](https://github.com/username/repository/graphs/commit-activity)
 
+
+## Table of Contents
+- [Overview](#overview)
+  - [Key Features](#key-features)
+  - [Benefits](#benefits)
+- [Installation](#installation)
+  - [Prerequisites](#prerequisites)
+  - [Setup](#setup)
+  - [Configuration](#configuration)
+- [Graph Schema Overview](#graph-schema-overview)
+  - [Node Types](#node-types)
+  - [Relationships](#relationships)
+  - [Properties](#properties)
+- [Usage](#usage)
+  - [Basic Queries](#basic-queries)
+  - [Advanced Analysis](#advanced-analysis)
+  - [Common Use Cases](#common-use-cases)
+- [Query Examples](#query-examples)
+  - [Meeting Analysis](#meeting-analysis)
+  - [Participant Interactions](#participant-interactions)
+  - [Decision Tracking](#decision-tracking)
+  - [Action Item Analysis](#action-item-analysis)
+- [Best Practices](#best-practices)
+  - [Data Entry](#data-entry)
+  - [Query Optimization](#query-optimization)
+  - [Performance Tips](#performance-tips)
+- [Contributing](#contributing)
+  - [Development Setup](#development-setup)
+  - [Submission Guidelines](#submission-guidelines)
+- [License](#license)
+
 ## Overview
 
 A graph-based system for analyzing meeting relationships, participant interactions, and decision flows.
