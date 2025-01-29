@@ -582,87 +582,6 @@ ORDER BY TotalActivity DESC;
 - Topics and Emotions provide context and categorization
 - Documents track meeting materials and references
 
----
-
-## Usage
-
-Run the importer:
-```bash
-python neo.py
-```
-
-### Example Queries
-
-View all relationships:
-```cypher
-MATCH (n)-[r]->(m)
-RETURN n, r, m
-```
-
-Show meetings and participants:
-```cypher
-MATCH (p:Person)-[:ATTENDED]->(m:Meeting)
-RETURN m.workgroup, m.date, collect(p.name) as participants
-```
-
-View action items and assignees:
-```cypher
-MATCH (m:Meeting)-[:HAS_ACTION]->(a:ActionItem)-[:ASSIGNED_TO]->(p:Person)
-RETURN m.date, a.text, p.name, a.status, a.dueDate
-```
-
-View meeting structure:
-```cypher
-MATCH (p:Person)-[:ATTENDED]->(m:Meeting)
-RETURN m.workgroup, m.date, collect(p.name) as participants
-```
-
-View meeting agenda items and decisions:
-```cypher
-MATCH (m:Meeting)-[:HAS_AGENDA_ITEM]->(a:AgendaItem)-[:MADE_DECISION]->(d:Decision)
-RETURN m.date, a.status, d.decision, d.rationale
-```
-
-View meeting metadata:
-```cypher
-MATCH (m:Meeting)-[:COVERS_TOPIC]->(t:Topic)
-RETURN m.date, m.workgroup, collect(t.name) as topics
-
-MATCH (m:Meeting)-[:HAS_EMOTION]->(e:Emotion)
-RETURN m.date, m.workgroup, collect(e.name) as emotions
-
-MATCH (m:Meeting)
-OPTIONAL MATCH (m)-[:COVERS_TOPIC]->(t:Topic)
-OPTIONAL MATCH (m)-[:HAS_EMOTION]->(e:Emotion)
-RETURN m.date, m.workgroup, 
-       collect(DISTINCT t.name) as topics,
-       collect(DISTINCT e.name) as emotions
-```
-
----
-
-## Files
-- `neo.py`: Database connection and data import logic
-- `snet-data.json`: Source meeting data
-- `.env`: Neo4j credentials (not tracked in git)
-- `.gitignore`: Git ignore rules
-
----
-
-## Notes
-
-- Ensure `.env` is in `.gitignore` to protect credentials
-- Meeting data should follow the specified JSON structure
-- Requires active Neo4j Aura instance
-
----
-
-## License
-
-MIT License
-
----
-
 ### Graph Metrics Relationships
 
 ```cypher
@@ -715,74 +634,6 @@ RETURN
     (2.0 * count(*)) / (degree * (degree - 1)) as clustering_coefficient
 ORDER BY clustering_coefficient DESC;
 ```
-
-### Relationship Between Metrics:
-
-1. **Degree and Path Length**
-   - Higher degree often means shorter paths
-   - Central nodes reduce overall path lengths
-   - More connections = more routing options
-
-2. **Degree and Density**
-   - Degree sum = 2 × number of relationships
-   - Average degree indicates graph density
-   - Higher density = higher average degree
-
-3. **Degree and Clustering**
-   - Degree affects clustering coefficient
-   - High degree nodes often form hubs
-   - Connected neighbors indicate communities
-
-### Common Patterns:
-
-1. **Hub Nodes (High Degree)**
-   - Many direct connections
-   - Short average path lengths
-   - Important for information flow
-
-2. **Bridge Nodes (Medium Degree)**
-   - Connect different communities
-   - Critical for network flow
-   - Remove them = disconnect groups
-
-3. **Peripheral Nodes (Low Degree)**
-   - Few connections
-   - Long path lengths
-   - Often specialized or new nodes
-
-### Business Context:
-
-1. **Meeting Analysis**
-   - High degree = well-attended meetings
-   - Path length = information flow steps
-   - Clustering = team collaboration patterns
-
-2. **Person Analysis**
-   - High degree = key participants
-   - Path length = collaboration distance
-   - Clustering = team formation
-
-3. **Topic Analysis**
-   - High degree = common themes
-   - Path length = topic relationships
-   - Clustering = related topic groups
-
-### Understanding the Metrics:
-
-1. **Degree Metrics**
-   - Direct connections count
-   - Indicates node importance
-   - Shows immediate influence
-
-2. **Path Length Metrics**
-   - Steps between nodes
-   - Information flow distance
-   - Network efficiency
-
-3. **Clustering Metrics**
-   - Neighbor interconnectivity
-   - Community detection
-   - Collaboration density
 
 ### Visualization Recommendations
 
@@ -894,4 +745,81 @@ ORDER BY cluster_size DESC;
    - Real-time updates
    - Action item tracking
    - Meeting connections
+
+## Usage
+
+Run the importer:
+```bash
+python neo.py
+```
+
+### Example Queries
+
+View all relationships:
+```cypher
+MATCH (n)-[r]->(m)
+RETURN n, r, m
+```
+
+Show meetings and participants:
+```cypher
+MATCH (p:Person)-[:ATTENDED]->(m:Meeting)
+RETURN m.workgroup, m.date, collect(p.name) as participants
+```
+
+View action items and assignees:
+```cypher
+MATCH (m:Meeting)-[:HAS_ACTION]->(a:ActionItem)-[:ASSIGNED_TO]->(p:Person)
+RETURN m.date, a.text, p.name, a.status, a.dueDate
+```
+
+View meeting structure:
+```cypher
+MATCH (p:Person)-[:ATTENDED]->(m:Meeting)
+RETURN m.workgroup, m.date, collect(p.name) as participants
+```
+
+View meeting agenda items and decisions:
+```cypher
+MATCH (m:Meeting)-[:HAS_AGENDA_ITEM]->(a:AgendaItem)-[:MADE_DECISION]->(d:Decision)
+RETURN m.date, a.status, d.decision, d.rationale
+```
+
+View meeting metadata:
+```cypher
+MATCH (m:Meeting)-[:COVERS_TOPIC]->(t:Topic)
+RETURN m.date, m.workgroup, collect(t.name) as topics
+
+MATCH (m:Meeting)-[:HAS_EMOTION]->(e:Emotion)
+RETURN m.date, m.workgroup, collect(e.name) as emotions
+
+MATCH (m:Meeting)
+OPTIONAL MATCH (m)-[:COVERS_TOPIC]->(t:Topic)
+OPTIONAL MATCH (m)-[:HAS_EMOTION]->(e:Emotion)
+RETURN m.date, m.workgroup, 
+       collect(DISTINCT t.name) as topics,
+       collect(DISTINCT e.name) as emotions
+```
+
+---
+
+## Files
+- `neo.py`: Database connection and data import logic
+- `snet-data.json`: Source meeting data
+- `.env`: Neo4j credentials (not tracked in git)
+- `.gitignore`: Git ignore rules
+
+---
+
+## Notes
+
+- Ensure `.env` is in `.gitignore` to protect credentials
+- Meeting data should follow the specified JSON structure
+- Requires active Neo4j Aura instance
+
+---
+
+## License
+
+MIT License
 
