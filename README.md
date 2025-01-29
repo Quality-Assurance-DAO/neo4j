@@ -298,6 +298,144 @@ Use these queries to understand:
 - Data model completeness
 - Potential anomalies or isolated data
 
+### Specialized Graph Analysis
+
+#### 1. Node-Specific Queries
+```cypher
+// Meeting Analysis
+MATCH (m:Meeting)
+RETURN m.workgroup,
+       count(*) as meeting_count,
+       min(m.date) as first_meeting,
+       max(m.date) as last_meeting,
+       avg(size((m)<-[:ATTENDED]-(:Person))) as avg_attendance
+ORDER BY meeting_count DESC;
+
+// Person Participation
+MATCH (p:Person)-[:ATTENDED]->(m:Meeting)
+WITH p.name as person,
+     count(m) as meetings_attended,
+     collect(DISTINCT m.workgroup) as workgroups
+RETURN person,
+       meetings_attended,
+       workgroups,
+       size(workgroups) as workgroup_count
+ORDER BY meetings_attended DESC;
+
+// Document Usage
+MATCH (d:Document)<-[:HAS_DOCUMENT]-(m:Meeting)
+WITH d.title as document,
+     count(m) as times_referenced,
+     collect(DISTINCT m.date) as meeting_dates
+RETURN document,
+       times_referenced,
+       meeting_dates
+ORDER BY times_referenced DESC;
+```
+
+#### 2. Temporal Analysis
+```cypher
+// Meeting Frequency Over Time
+MATCH (m:Meeting)
+WITH date(m.date) as meeting_date,
+     m.workgroup as workgroup
+RETURN workgroup,
+       meeting_date.quarter as quarter,
+       meeting_date.year as year,
+       count(*) as meeting_count
+ORDER BY year, quarter;
+
+// Decision Timeline
+MATCH (m:Meeting)-[:MADE_DECISION]->(d:Decision)
+WITH date(m.date) as decision_date,
+     d.effect as effect_type,
+     count(*) as decision_count
+RETURN decision_date,
+       effect_type,
+       decision_count
+ORDER BY decision_date;
+
+// Action Item Tracking
+MATCH (m:Meeting)-[:HAS_ACTION]->(a:ActionItem)
+WHERE a.dueDate IS NOT NULL
+WITH date(a.dueDate) as due_date,
+     a.status as status,
+     count(*) as action_count
+RETURN due_date,
+       status,
+       action_count
+ORDER BY due_date;
+```
+
+#### 3. Data Quality Checks
+```cypher
+// Missing Required Properties
+MATCH (m:Meeting)
+WHERE NOT EXISTS(m.date) 
+   OR NOT EXISTS(m.workgroup)
+   OR NOT EXISTS(m.host)
+RETURN 'Meeting' as Node_Type,
+       m.id as ID,
+       [k in keys(m) WHERE m[k] IS NULL] as Null_Properties;
+
+// Orphaned Nodes
+MATCH (n)
+WHERE NOT (n)--()
+RETURN labels(n) as Node_Type,
+       n.id as ID,
+       keys(n) as Properties;
+
+// Inconsistent Date Formats
+MATCH (m:Meeting)
+WHERE NOT datetime(m.date) IS NULL
+RETURN m.date as Invalid_Date_Format,
+       m.id as Meeting_ID;
+
+// Duplicate Detection
+MATCH (m1:Meeting)
+MATCH (m2:Meeting)
+WHERE id(m1) < id(m2)
+  AND m1.date = m2.date 
+  AND m1.workgroup = m2.workgroup
+RETURN m1.id as ID1,
+       m2.id as ID2,
+       m1.date as Date,
+       m1.workgroup as Workgroup;
+
+// Relationship Integrity
+MATCH (a:ActionItem)
+WHERE NOT (a)<-[:HAS_ACTION]-(:Meeting)
+   OR NOT (a)-[:ASSIGNED_TO]->(:Person)
+RETURN a.text as Action_Item,
+       EXISTS((a)<-[:HAS_ACTION]-(:Meeting)) as Has_Meeting,
+       EXISTS((a)-[:ASSIGNED_TO]->(:Person)) as Has_Assignee;
+```
+
+These queries help you:
+
+1. **Node-Specific Analysis**:
+   - Track meeting patterns by workgroup
+   - Monitor participant engagement
+   - Analyze document usage
+
+2. **Temporal Analysis**:
+   - View meeting frequency trends
+   - Track decision-making patterns
+   - Monitor action item timelines
+
+3. **Data Quality**:
+   - Find missing required properties
+   - Identify orphaned nodes
+   - Detect date format issues
+   - Find potential duplicates
+   - Check relationship integrity
+
+Use these queries to:
+- Monitor participation patterns
+- Track workgroup activity
+- Identify data quality issues
+- Ensure data consistency
+
 ---
 
 ## Usage
