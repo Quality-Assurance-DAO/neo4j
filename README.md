@@ -8,13 +8,13 @@
 
 ## Overview
 
-This utility imports SingularityNET meeting data into a Neo4j Aura graph database, creating a queryable graph structure of meetings, participants, documents, and action items.
+This utility imports SingularityNET meeting data into a Neo4j Aura graph database, creating a queryable graph structure of meetings, participants, documents, action items, and metadata.
 
 ## Data Model Visualization
 
 ![Graph Data Model](graph-model.png)
 
-*Figure 1: Graph model showing relationships between Meetings, People, Documents, and Action Items*
+*Figure 1: Graph model showing relationships between Meetings and related entities*
 
 ---
 
@@ -91,16 +91,26 @@ This utility imports SingularityNET meeting data into a Neo4j Aura graph databas
 ## Graph Data Model
 
 ### Nodes
-- **Meeting**: Contains meeting metadata (workgroup, date, host, etc.)
+- **Meeting**: Contains meeting metadata (workgroup, date, host, topics, emotions)
 - **Person**: Represents meeting participants
 - **Document**: Working documents referenced in meetings
 - **ActionItem**: Tasks assigned during meetings
+- **AgendaItem**: Meeting agenda items with status and narrative
+- **DiscussionPoint**: Points discussed in agenda items
+- **Decision**: Decisions made during the meeting
+- **Topic**: Topics covered in the meeting
+- **Emotion**: Emotional context or tone of the meeting
 
 ### Relationships
 - `(Person)-[:ATTENDED]->(Meeting)`
 - `(Meeting)-[:HAS_DOCUMENT]->(Document)`
 - `(Meeting)-[:HAS_ACTION]->(ActionItem)`
 - `(ActionItem)-[:ASSIGNED_TO]->(Person)`
+- `(Meeting)-[:HAS_AGENDA_ITEM]->(AgendaItem)`
+- `(AgendaItem)-[:INCLUDES_DISCUSSION]->(DiscussionPoint)`
+- `(AgendaItem)-[:MADE_DECISION]->(Decision)`
+- `(Meeting)-[:COVERS_TOPIC]->(Topic)`
+- `(Meeting)-[:HAS_EMOTION]->(Emotion)`
 
 ---
 
@@ -129,6 +139,34 @@ View action items and assignees:
 ```cypher
 MATCH (m:Meeting)-[:HAS_ACTION]->(a:ActionItem)-[:ASSIGNED_TO]->(p:Person)
 RETURN m.date, a.text, p.name, a.status, a.dueDate
+```
+
+View meeting structure:
+```cypher
+MATCH (p:Person)-[:ATTENDED]->(m:Meeting)
+RETURN m.workgroup, m.date, collect(p.name) as participants
+```
+
+View meeting agenda items and decisions:
+```cypher
+MATCH (m:Meeting)-[:HAS_AGENDA_ITEM]->(a:AgendaItem)-[:MADE_DECISION]->(d:Decision)
+RETURN m.date, a.status, d.decision, d.rationale
+```
+
+View meeting metadata:
+```cypher
+MATCH (m:Meeting)-[:COVERS_TOPIC]->(t:Topic)
+RETURN m.date, m.workgroup, collect(t.name) as topics
+
+MATCH (m:Meeting)-[:HAS_EMOTION]->(e:Emotion)
+RETURN m.date, m.workgroup, collect(e.name) as emotions
+
+MATCH (m:Meeting)
+OPTIONAL MATCH (m)-[:COVERS_TOPIC]->(t:Topic)
+OPTIONAL MATCH (m)-[:HAS_EMOTION]->(e:Emotion)
+RETURN m.date, m.workgroup, 
+       collect(DISTINCT t.name) as topics,
+       collect(DISTINCT e.name) as emotions
 ```
 
 ---
