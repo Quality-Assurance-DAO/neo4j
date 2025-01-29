@@ -8,6 +8,8 @@
 
 ## Overview
 
+A graph-based system for analyzing meeting relationships, participant interactions, and decision flows.
+
 This utility imports SingularityNET meeting data into a Neo4j Aura graph database, creating a queryable graph structure of meetings, participants, documents, action items, and metadata.
 
 ## Data Model Visualization
@@ -28,6 +30,8 @@ This utility imports SingularityNET meeting data into a Neo4j Aura graph databas
 ---
 
 ## Prerequisites
+
+Before diving into the analysis, ensure you have the following prerequisites installed and configured:
 
 - Python 3.8 or later
 - Neo4j Aura database instance
