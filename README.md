@@ -132,26 +132,26 @@ This utility imports SingularityNET meeting data into a Neo4j Aura graph databas
 
 ### Example Queries
 ```cypher
-// View agenda items and their action items
-MATCH (m:Meeting)-[:HAS_AGENDA_ITEM]->(a:AgendaItem)-[:HAS_ACTION]->(act:ActionItem)-[:ASSIGNED_TO]->(p:Person)
+// View action items with their meeting context
+MATCH (m:Meeting)-[:HAS_ACTION]->(act:ActionItem)-[:ASSIGNED_TO]->(p:Person)
 RETURN m.date,
-       a.status,
+       m.workgroup,
        act.text as action,
        p.name as assignee,
        act.dueDate,
        act.status;
 
-// View complete agenda item structure
-MATCH (m:Meeting)-[:HAS_AGENDA_ITEM]->(a:AgendaItem)
-OPTIONAL MATCH (a)-[:HAS_ACTION]->(act:ActionItem)-[:ASSIGNED_TO]->(p:Person)
-OPTIONAL MATCH (a)-[:MADE_DECISION]->(d:Decision)
-OPTIONAL MATCH (a)-[:INCLUDES_DISCUSSION]->(dp:DiscussionPoint)
+// Alternative view including agenda items when available
+MATCH (m:Meeting)
+OPTIONAL MATCH (m)-[:HAS_ACTION]->(act:ActionItem)-[:ASSIGNED_TO]->(p:Person)
 RETURN m.date,
-       a.status,
-       a.narrative,
-       collect(DISTINCT {action: act.text, assignee: p.name}) as actions,
-       collect(DISTINCT d.decision) as decisions,
-       collect(DISTINCT dp.text) as discussion_points;
+       m.workgroup,
+       collect({
+           action: act.text,
+           assignee: p.name,
+           dueDate: act.dueDate,
+           status: act.status
+       }) as actions;
 ```
 
 ---
