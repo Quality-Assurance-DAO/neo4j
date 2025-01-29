@@ -441,6 +441,34 @@ Use these queries to:
 - Identify data quality issues
 - Ensure data consistency
 
+### Graph Schema Overview
+```cypher
+// Schema-level view
+MATCH (a)-[r]->(b)
+WITH DISTINCT
+    labels(a)[0] as Source_Type,
+    type(r) as Relationship,
+    labels(b)[0] as Target_Type
+RETURN 
+    Source_Type + ' -[' + Relationship + ']-> ' + Target_Type as Graph_Structure
+ORDER BY Source_Type, Relationship;
+```
+
+This query shows the high-level structure of the graph, displaying all node types and how they are connected through relationships.
+
+Expected output might look like:
+```
+Graph_Structure
+----------------------------------------
+ActionItem -[ASSIGNED_TO]-> Person
+Meeting -[COVERS_TOPIC]-> Topic
+Meeting -[HAS_ACTION]-> ActionItem
+Meeting -[HAS_DOCUMENT]-> Document
+Meeting -[HAS_EMOTION]-> Emotion
+Meeting -[MADE_DECISION]-> Decision
+Person -[ATTENDED]-> Meeting
+```
+
 ---
 
 ## Usage
