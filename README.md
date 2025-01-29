@@ -380,44 +380,40 @@ ORDER BY m.date DESC;
 ```cypher
 // Missing Required Properties
 MATCH (m:Meeting)
-WHERE NOT EXISTS(m.date) 
-   OR NOT EXISTS(m.workgroup)
-   OR NOT EXISTS(m.host)
+WHERE m.date IS NULL 
+   OR m.workgroup IS NULL
+   OR m.host IS NULL
 RETURN 'Meeting' as Node_Type,
        m.id as ID,
        [k in keys(m) WHERE m[k] IS NULL] as Null_Properties;
 
-// Orphaned Nodes
+// Comprehensive Property Check
 MATCH (n)
-WHERE NOT (n)--()
-RETURN labels(n) as Node_Type,
+WITH n, labels(n)[0] as Node_Type
+WITH n, Node_Type,
+     CASE Node_Type
+         WHEN 'Meeting' THEN ['date', 'workgroup', 'host']
+         WHEN 'Person' THEN ['name']
+         WHEN 'ActionItem' THEN ['text', 'status', 'assignee']
+         WHEN 'Decision' THEN ['decision', 'effect']
+         ELSE []
+     END as required_properties
+WITH n, Node_Type, required_properties,
+     [prop in required_properties WHERE n[prop] IS NULL] as missing_properties
+WHERE size(missing_properties) > 0
+RETURN Node_Type,
        n.id as ID,
-       keys(n) as Properties;
+       missing_properties,
+       properties(n) as existing_properties;
 
-// Inconsistent Date Formats
-MATCH (m:Meeting)
-WHERE NOT datetime(m.date) IS NULL
-RETURN m.date as Invalid_Date_Format,
-       m.id as Meeting_ID;
-
-// Duplicate Detection
-MATCH (m1:Meeting)
-MATCH (m2:Meeting)
-WHERE id(m1) < id(m2)
-  AND m1.date = m2.date 
-  AND m1.workgroup = m2.workgroup
-RETURN m1.id as ID1,
-       m2.id as ID2,
-       m1.date as Date,
-       m1.workgroup as Workgroup;
-
-// Relationship Integrity
-MATCH (a:ActionItem)
-WHERE NOT (a)<-[:HAS_ACTION]-(:Meeting)
-   OR NOT (a)-[:ASSIGNED_TO]->(:Person)
-RETURN a.text as Action_Item,
-       EXISTS((a)<-[:HAS_ACTION]-(:Meeting)) as Has_Meeting,
-       EXISTS((a)-[:ASSIGNED_TO]->(:Person)) as Has_Assignee;
+// Empty String Properties
+MATCH (n)
+WITH n, labels(n)[0] as Node_Type,
+     [k in keys(n) WHERE n[k] = ''] as empty_properties
+WHERE size(empty_properties) > 0
+RETURN Node_Type,
+       n.id as ID,
+       empty_properties;
 ```
 
 These queries help you:
