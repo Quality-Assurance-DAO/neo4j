@@ -304,33 +304,25 @@ Use these queries to understand:
 ```cypher
 // Meeting Analysis
 MATCH (m:Meeting)
-RETURN m.workgroup,
+OPTIONAL MATCH (p:Person)-[:ATTENDED]->(m)
+WITH m.workgroup as workgroup,
+     m.date as meeting_date,
+     count(DISTINCT p) as attendee_count
+RETURN workgroup,
        count(*) as meeting_count,
-       min(m.date) as first_meeting,
-       max(m.date) as last_meeting,
-       avg(size((m)<-[:ATTENDED]-(:Person))) as avg_attendance
+       min(meeting_date) as first_meeting,
+       max(meeting_date) as last_meeting,
+       avg(attendee_count) as avg_attendance
 ORDER BY meeting_count DESC;
 
-// Person Participation
-MATCH (p:Person)-[:ATTENDED]->(m:Meeting)
-WITH p.name as person,
-     count(m) as meetings_attended,
-     collect(DISTINCT m.workgroup) as workgroups
-RETURN person,
-       meetings_attended,
-       workgroups,
-       size(workgroups) as workgroup_count
-ORDER BY meetings_attended DESC;
-
-// Document Usage
-MATCH (d:Document)<-[:HAS_DOCUMENT]-(m:Meeting)
-WITH d.title as document,
-     count(m) as times_referenced,
-     collect(DISTINCT m.date) as meeting_dates
-RETURN document,
-       times_referenced,
-       meeting_dates
-ORDER BY times_referenced DESC;
+// Alternative detailed view
+MATCH (m:Meeting)
+OPTIONAL MATCH (p:Person)-[:ATTENDED]->(m)
+RETURN m.workgroup as workgroup,
+       m.date as meeting_date,
+       count(DISTINCT p) as attendee_count,
+       collect(p.name) as attendees
+ORDER BY m.date DESC;
 ```
 
 #### 2. Temporal Analysis
