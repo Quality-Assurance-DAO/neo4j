@@ -114,12 +114,20 @@ class AuraConnection:
             with open(json_file_path, 'r') as file:
                 data = json.load(file)
             
+            # Add this at the start of the method
+            print("\nFirst meeting structure:")
+            first_meeting = next(iter(data.values()))[0]
+            print("Agenda Items:", json.dumps(first_meeting['agendaItems'], indent=2))
+            
             with self.driver.session() as session:
                 # First, clear existing data
                 session.run("MATCH (n) DETACH DELETE n")
                 
                 for meeting_id, meetings in data.items():
                     for meeting in meetings:
+                        # Debug print
+                        print(f"\nProcessing meeting: {meeting_id}")
+                        
                         # Create Meeting node with tags
                         meeting_query = """
                         CREATE (m:Meeting {
@@ -284,12 +292,55 @@ class AuraConnection:
                                 'meeting_id': meeting_id,
                                 'actions': all_actions
                             })
+                        
+                        # Create Decision Items from agenda items
+                        decisions_query = """
+                        MATCH (m:Meeting {id: $meeting_id})
+                        WITH m
+                        UNWIND $decisions AS dec
+                        CREATE (d:Decision {
+                            decision: dec.decision,
+                            rationale: dec.rationale,
+                            opposing: dec.opposing,
+                            effect: dec.effect
+                        })
+                        CREATE (m)-[:MADE_DECISION]->(d)
+                        RETURN count(d) as decisions_created
+                        """
+                        
+                        # Collect all decisions from agenda items with debug
+                        all_decisions = []
+                        for idx, agenda_item in enumerate(meeting['agendaItems']):
+                            decisions = agenda_item.get('decisionItems', [])
+                            print(f"Found {len(decisions)} decisions in agenda item {idx}")
+                            print(f"Decisions: {decisions}")
+                            all_decisions.extend(decisions)
+                        
+                        print(f"Total decisions to create: {len(all_decisions)}")
+                        
+                        if all_decisions:
+                            result = session.run(decisions_query, {
+                                'meeting_id': meeting_id,
+                                'decisions': all_decisions
+                            })
+                            created = result.single()['decisions_created']
+                            print(f"Created {created} decision nodes")
+                        
+                        # Verify decisions were created
+                        verify_query = """
+                        MATCH (m:Meeting {id: $meeting_id})-[:MADE_DECISION]->(d:Decision)
+                        RETURN count(d) as decision_count
+                        """
+                        result = session.run(verify_query, {'meeting_id': meeting_id})
+                        count = result.single()['decision_count']
+                        print(f"Verified {count} decisions in database for meeting {meeting_id}")
                 
-                self.logger.info(f"Successfully imported meeting data with tags from {json_file_path}")
+                self.logger.info(f"Successfully imported meeting data with decisions")
                 return True
                 
         except Exception as e:
             self.logger.error(f"Failed to import JSON data: {str(e)}")
+            print(f"Error details: {str(e)}")
             return False
 
 def main():

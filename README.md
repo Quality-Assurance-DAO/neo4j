@@ -114,6 +114,76 @@ This utility imports SingularityNET meeting data into a Neo4j Aura graph databas
 
 ---
 
+## Example Queries
+
+### View Meeting Decisions
+```cypher
+// View all decisions with full details
+MATCH (m:Meeting)-[:MADE_DECISION]->(d:Decision)
+RETURN m.date, 
+       m.workgroup,
+       d.decision as decision_text,
+       d.rationale,
+       d.opposing,
+       d.effect
+ORDER BY m.date;
+
+// View decisions that may affect others
+MATCH (m:Meeting)-[:MADE_DECISION]->(d:Decision)
+WHERE d.effect = 'mayAffectOtherPeople'
+RETURN m.date, 
+       m.workgroup,
+       substring(d.decision, 0, 100) + '...' as decision_preview;
+
+// View decisions for a specific meeting
+MATCH (m:Meeting)-[:MADE_DECISION]->(d:Decision)
+WHERE m.id = $meeting_id
+RETURN m.date, 
+       d.decision as decision_text,
+       d.rationale,
+       d.opposing,
+       d.effect;
+```
+
+### View Meeting Structure
+```cypher
+// Basic meeting information with participants
+MATCH (p:Person)-[:ATTENDED]->(m:Meeting)
+RETURN m.workgroup, m.date, collect(p.name) as participants
+
+// Meeting agenda items and decisions
+MATCH (m:Meeting)-[:HAS_AGENDA_ITEM]->(a:AgendaItem)-[:MADE_DECISION]->(d:Decision)
+RETURN m.date, a.status, d.decision, d.rationale
+
+// Action items and assignees
+MATCH (m:Meeting)-[:HAS_ACTION]->(a:ActionItem)-[:ASSIGNED_TO]->(p:Person)
+RETURN m.date, a.text, p.name, a.status, a.dueDate
+```
+
+### View Meeting Metadata
+```cypher
+// Topics covered in meetings
+MATCH (m:Meeting)-[:COVERS_TOPIC]->(t:Topic)
+RETURN m.date, m.workgroup, collect(t.name) as topics
+
+// Meeting emotions and context
+MATCH (m:Meeting)-[:HAS_EMOTION]->(e:Emotion)
+RETURN m.date, m.workgroup, collect(e.name) as emotions
+
+// Complete meeting overview
+MATCH (m:Meeting)
+OPTIONAL MATCH (m)-[:COVERS_TOPIC]->(t:Topic)
+OPTIONAL MATCH (m)-[:HAS_EMOTION]->(e:Emotion)
+OPTIONAL MATCH (m)-[:MADE_DECISION]->(d:Decision)
+RETURN m.date, 
+       m.workgroup, 
+       collect(DISTINCT t.name) as topics,
+       collect(DISTINCT e.name) as emotions,
+       count(d) as decisions_made
+```
+
+---
+
 ## Usage
 
 Run the importer:
