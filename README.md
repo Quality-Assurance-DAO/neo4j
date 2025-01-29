@@ -350,13 +350,31 @@ ORDER BY decision_date;
 // Action Item Tracking
 MATCH (m:Meeting)-[:HAS_ACTION]->(a:ActionItem)
 WHERE a.dueDate IS NOT NULL
-WITH date(a.dueDate) as due_date,
+WITH datetime(replace(a.dueDate, ' ', 'T')) as due_date,
      a.status as status,
      count(*) as action_count
-RETURN due_date,
+RETURN date(due_date) as due_date,
        status,
        action_count
 ORDER BY due_date;
+
+// Alternative format with original date string
+MATCH (m:Meeting)-[:HAS_ACTION]->(a:ActionItem)
+WHERE a.dueDate IS NOT NULL
+RETURN a.dueDate as original_due_date,
+       a.status as status,
+       count(*) as action_count
+ORDER BY a.dueDate;
+
+// Action Items by Week
+MATCH (m:Meeting)-[:HAS_ACTION]->(a:ActionItem)
+WHERE a.dueDate IS NOT NULL
+WITH datetime(replace(a.dueDate, ' ', 'T')) as due_date,
+     a.status as status
+RETURN date.truncate('week', date(due_date)) as week,
+       status,
+       count(*) as action_count
+ORDER BY week;
 ```
 
 #### 3. Data Quality Checks
