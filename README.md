@@ -823,3 +823,106 @@ RETURN m.date, m.workgroup,
 
 MIT License
 
+# Meeting Graph Analysis
+
+## Overview
+A graph-based system for analyzing meeting relationships, participant interactions, and decision flows.
+
+## Installation
+Before diving into the analysis, ensure you have the following prerequisites installed and configured:
+
+## Graph Schema Overview
+To understand how the data is structured, let's first look at the relationships between different entities in our graph:
+
+```cypher
+// Schema-level view
+MATCH (a)-[r]->(b)
+WITH DISTINCT
+    labels(a)[0] as Source_Type,
+    type(r) as Relationship,
+    labels(b)[0] as Target_Type
+RETURN 
+    Source_Type + ' -[' + Relationship + ']-> ' + Target_Type as Graph_Structure
+ORDER BY Source_Type, Relationship;
+```
+
+Now that we understand the schema, let's explore how we can analyze the relationships and patterns within our data.
+
+## Graph Metrics Relationships
+Understanding the connections and their significance is crucial for meaningful analysis. Here are the key metrics we'll use:
+
+[Graph Metrics content]
+
+### Relationship Between Metrics
+These metrics don't exist in isolation - they work together to provide deeper insights:
+
+[Metrics relationships content]
+
+### Common Patterns
+Through these metrics, we can identify several important patterns in our meeting data:
+
+[Common patterns content]
+
+### Business Context
+Let's see how these patterns translate into practical business insights:
+
+[Business context content]
+
+### Understanding the Metrics
+To make the best use of these metrics, it's important to understand their practical implications:
+
+[Metrics understanding content]
+
+## Visualization Recommendations
+While numerical analysis is powerful, visualizing the data can provide immediate insights and patterns:
+
+### Node Degree Visualization
+Let's start with visualizing the connections between entities:
+
+[Node degree visualization content]
+
+### Path Length Visualization
+Understanding the distance between nodes helps identify communication patterns:
+
+[Path length visualization content]
+
+### Clustering Visualization
+Identifying groups and communities reveals organizational patterns:
+
+[Clustering visualization content]
+
+### Recommended Visualization Tools
+To bring these visualizations to life, here are some recommended tools:
+
+[Visualization tools content]
+
+### Visualization Use Cases
+These visualizations can be applied in various business scenarios:
+
+[Use cases content]
+
+## Usage
+Now that we understand the metrics and visualizations, let's look at how to implement these analyses:
+
+[Usage content]
+
+## Query Examples
+Here are some practical examples to get you started:
+
+[Query examples content]
+
+## Best Practices
+To make the most of this analysis system, consider these recommendations:
+
+[Best practices content]
+
+## Contributing
+We welcome contributions to improve and extend this analysis system:
+
+[Contributing guidelines]
+
+## License
+This project is available under the following terms:
+
+[License information]
+
