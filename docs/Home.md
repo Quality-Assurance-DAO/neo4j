@@ -1,4 +1,3 @@
-Home
 
 ## Graph Data Model
 
@@ -24,7 +23,7 @@ Home
 - `(Meeting)-[:COVERS_TOPIC]->(Topic)`
 - `(Meeting)-[:HAS_EMOTION]->(Emotion)`
 
-### Example Queries
+## Example Queries
 ```cypher
 // View action items with their meeting context
 MATCH (m:Meeting)-[:HAS_ACTION]->(act:ActionItem)-[:ASSIGNED_TO]->(p:Person)
@@ -79,9 +78,9 @@ ORDER BY m.date DESC;
 
 The first query visualizes the complete graph structure, while the second query provides a numerical overview of all connected entities for each meeting.
 
-### Graph Structure Analysis
+## Graph Structure Analysis
 
-#### 1. Node Label Analysis
+### 1. Node Label Analysis
 ```cypher
 // Basic node count by label
 MATCH (n)
@@ -106,7 +105,7 @@ RETURN labels(n) as Node_Type,
        count(*) as Isolated_Count;
 ```
 
-#### 2. Relationship Analysis
+### 2. Relationship Analysis
 ```cypher
 // Direct relationships between node types
 MATCH (a)-[r]->(b)
@@ -137,7 +136,7 @@ RETURN DISTINCT
 ORDER BY Interaction_Count DESC;
 ```
 
-#### 3. Graph Schema
+### 3. Graph Schema
 ```cypher
 // Complete graph schema
 CALL db.schema.visualization();
@@ -192,9 +191,9 @@ Use these queries to understand:
 - Data model completeness
 - Potential anomalies or isolated data
 
-### Specialized Graph Analysis
+## Specialized Graph Analysis
 
-#### 1. Node-Specific Queries
+### 1. Node-Specific Queries
 ```cypher
 // Meeting Analysis
 MATCH (m:Meeting)
@@ -219,7 +218,7 @@ RETURN m.workgroup as workgroup,
 ORDER BY m.date DESC;
 ```
 
-#### 2. Temporal Analysis
+### 2. Temporal Analysis
 ```cypher
 // Meeting Frequency Over Time
 MATCH (m:Meeting)
@@ -270,7 +269,7 @@ RETURN m.date as meeting_date,
 ORDER BY m.date DESC;
 ```
 
-#### 3. Data Quality Checks
+### 3. Data Quality Checks
 ```cypher
 // Missing Required Properties
 MATCH (m:Meeting)
@@ -335,7 +334,7 @@ Use these queries to:
 - Identify data quality issues
 - Ensure data consistency
 
-### Graph Schema Overview
+## Graph Schema Overview
 ```cypher
 // Schema-level view
 MATCH (a)-[r]->(b)
@@ -350,7 +349,7 @@ ORDER BY Source_Type, Relationship;
 
 This query shows the high-level structure of the graph, displaying all node types and how they are connected through relationships.
 
-### Understanding Node Degree
+## Understanding Node Degree
 
 Node Degree is a fundamental metric in graph analysis that measures how connected a node is. Think of it as counting a node's relationships.
 
@@ -432,7 +431,7 @@ ORDER BY TotalActivity DESC;
    - Find important meetings
    - Discover central topics
 
-### Relationship Definitions
+## Relationship Definitions
 
 1. **Person -> Meeting**
    - `ATTENDED`: Indicates a person was present at a meeting
@@ -476,7 +475,7 @@ ORDER BY TotalActivity DESC;
 - Topics and Emotions provide context and categorization
 - Documents track meeting materials and references
 
-### Graph Metrics Relationships
+## Graph Metrics Relationships
 
 ```cypher
 // 1. Degree and Path Length
@@ -529,7 +528,7 @@ RETURN
 ORDER BY clustering_coefficient DESC;
 ```
 
-### Visualization Recommendations
+## Visualization Recommendations
 
 1. **Node Degree Visualization**
 ```cypher
