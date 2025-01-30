@@ -12,7 +12,7 @@ A graph-based system for analyzing meeting relationships, participant interactio
 
 This utility imports SingularityNET meeting data into a Neo4j Aura graph database, creating a queryable graph structure of meetings, participants, documents, action items, and metadata.
 
-Chek out our wiki for detailed documentation and queries: [Wiki](https://github.com/Quality-Assurance-DAO/neo4j/wiki)
+Chek out our [Wiki](https://github.com/Quality-Assurance-DAO/neo4j/wiki) for detailed documentation and queries.
 
 ## Data Model Visualization
 
