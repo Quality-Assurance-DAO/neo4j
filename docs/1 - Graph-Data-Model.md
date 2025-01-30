@@ -39,10 +39,12 @@ RETURN m.date,
        p.name as assignee,
        act.dueDate,
        act.status;
+```
 
 ### Alternative View Including Agenda Items
 This query enhances the previous one by optionally including agenda items when available:
 
+```cypher
 // Alternative view including agenda items when available
 MATCH (m:Meeting)
 OPTIONAL MATCH (m)-[:HAS_ACTION]->(act:ActionItem)-[:ASSIGNED_TO]->(p:Person)
