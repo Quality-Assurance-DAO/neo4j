@@ -110,6 +110,85 @@ Before diving into the analysis, ensure you have the following prerequisites ins
 
 ---
 
+## Usage
+
+Run the importer:
+```bash
+python neo.py
+```
+
+### Example Queries
+
+View all relationships:
+```cypher
+MATCH (n)-[r]->(m)
+RETURN n, r, m
+```
+
+Show meetings and participants:
+```cypher
+MATCH (p:Person)-[:ATTENDED]->(m:Meeting)
+RETURN m.workgroup, m.date, collect(p.name) as participants
+```
+
+View action items and assignees:
+```cypher
+MATCH (m:Meeting)-[:HAS_ACTION]->(a:ActionItem)-[:ASSIGNED_TO]->(p:Person)
+RETURN m.date, a.text, p.name, a.status, a.dueDate
+```
+
+View meeting structure:
+```cypher
+MATCH (p:Person)-[:ATTENDED]->(m:Meeting)
+RETURN m.workgroup, m.date, collect(p.name) as participants
+```
+
+View meeting agenda items and decisions:
+```cypher
+MATCH (m:Meeting)-[:HAS_AGENDA_ITEM]->(a:AgendaItem)-[:MADE_DECISION]->(d:Decision)
+RETURN m.date, a.status, d.decision, d.rationale
+```
+
+View meeting metadata:
+```cypher
+MATCH (m:Meeting)-[:COVERS_TOPIC]->(t:Topic)
+RETURN m.date, m.workgroup, collect(t.name) as topics
+
+MATCH (m:Meeting)-[:HAS_EMOTION]->(e:Emotion)
+RETURN m.date, m.workgroup, collect(e.name) as emotions
+
+MATCH (m:Meeting)
+OPTIONAL MATCH (m)-[:COVERS_TOPIC]->(t:Topic)
+OPTIONAL MATCH (m)-[:HAS_EMOTION]->(e:Emotion)
+RETURN m.date, m.workgroup, 
+       collect(DISTINCT t.name) as topics,
+       collect(DISTINCT e.name) as emotions
+```
+
+---
+
+## Files
+- `neo.py`: Database connection and data import logic
+- `snet-data.json`: Source meeting data
+- `.env`: Neo4j credentials (not tracked in git)
+- `.gitignore`: Git ignore rules
+
+---
+
+## Notes
+
+- Ensure `.env` is in `.gitignore` to protect credentials
+- Meeting data should follow the specified JSON structure
+- Requires active Neo4j Aura instance
+
+---
+
+## License
+
+MIT License
+
+---
+
 ## Graph Data Model
 
 ### Nodes
@@ -750,79 +829,3 @@ ORDER BY cluster_size DESC;
    - Action item tracking
    - Meeting connections
 
-## Usage
-
-Run the importer:
-```bash
-python neo.py
-```
-
-### Example Queries
-
-View all relationships:
-```cypher
-MATCH (n)-[r]->(m)
-RETURN n, r, m
-```
-
-Show meetings and participants:
-```cypher
-MATCH (p:Person)-[:ATTENDED]->(m:Meeting)
-RETURN m.workgroup, m.date, collect(p.name) as participants
-```
-
-View action items and assignees:
-```cypher
-MATCH (m:Meeting)-[:HAS_ACTION]->(a:ActionItem)-[:ASSIGNED_TO]->(p:Person)
-RETURN m.date, a.text, p.name, a.status, a.dueDate
-```
-
-View meeting structure:
-```cypher
-MATCH (p:Person)-[:ATTENDED]->(m:Meeting)
-RETURN m.workgroup, m.date, collect(p.name) as participants
-```
-
-View meeting agenda items and decisions:
-```cypher
-MATCH (m:Meeting)-[:HAS_AGENDA_ITEM]->(a:AgendaItem)-[:MADE_DECISION]->(d:Decision)
-RETURN m.date, a.status, d.decision, d.rationale
-```
-
-View meeting metadata:
-```cypher
-MATCH (m:Meeting)-[:COVERS_TOPIC]->(t:Topic)
-RETURN m.date, m.workgroup, collect(t.name) as topics
-
-MATCH (m:Meeting)-[:HAS_EMOTION]->(e:Emotion)
-RETURN m.date, m.workgroup, collect(e.name) as emotions
-
-MATCH (m:Meeting)
-OPTIONAL MATCH (m)-[:COVERS_TOPIC]->(t:Topic)
-OPTIONAL MATCH (m)-[:HAS_EMOTION]->(e:Emotion)
-RETURN m.date, m.workgroup, 
-       collect(DISTINCT t.name) as topics,
-       collect(DISTINCT e.name) as emotions
-```
-
----
-
-## Files
-- `neo.py`: Database connection and data import logic
-- `snet-data.json`: Source meeting data
-- `.env`: Neo4j credentials (not tracked in git)
-- `.gitignore`: Git ignore rules
-
----
-
-## Notes
-
-- Ensure `.env` is in `.gitignore` to protect credentials
-- Meeting data should follow the specified JSON structure
-- Requires active Neo4j Aura instance
-
----
-
-## License
-
-MIT License
