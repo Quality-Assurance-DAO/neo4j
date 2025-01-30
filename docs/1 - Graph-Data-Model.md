@@ -95,7 +95,7 @@ RETURN m.date,
 ORDER BY m.date DESC;
 ```
 
-The **first query** provides a full graph visualization, allowing users to explore the structure in detail.
-The **second query** summarizes the relationships numerically, helping to understand the volume of actions, decisions, topics, and attendees per meeting.
+- The **first query** provides a full graph visualization, allowing users to explore the structure in detail.
+- The **second query** summarizes the relationships numerically, helping to understand the volume of actions, decisions, topics, and attendees per meeting.
 
 This structured data model enables **efficient querying, analysis, and insights into meeting-related interactions**, making it easier to track participation, monitor action items, and analyze decision-making patterns.
