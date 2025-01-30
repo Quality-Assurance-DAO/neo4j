@@ -1,5 +1,7 @@
 ## Specialized Graph Analysis
 
+![image](https://github.com/user-attachments/assets/57813810-db7d-4317-a047-d218eab755b7)
+
 ### 1. Node-Specific Queries
 ```cypher
 // Meeting Analysis
@@ -24,9 +26,6 @@ RETURN m.workgroup as workgroup,
        collect(p.name) as attendees
 ORDER BY m.date DESC;
 ```
-
-![image](https://github.com/user-attachments/assets/57813810-db7d-4317-a047-d218eab755b7)
-
 
 ### 2. Temporal Analysis
 ```cypher
