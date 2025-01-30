@@ -59,6 +59,9 @@ RETURN m.date,
 ```
 
 ### Graph Overview Query
+
+To get a comprehensive view of the entire meeting structure, the following query extracts all relationships connected to meetings:
+
 ```cypher
 // Get a complete view of the meeting graph structure
 MATCH (m:Meeting)
@@ -69,7 +72,12 @@ OPTIONAL MATCH (m)-[r5:COVERS_TOPIC]->(t:Topic)
 OPTIONAL MATCH (m)-[r6:HAS_EMOTION]->(e:Emotion)
 OPTIONAL MATCH (att:Person)-[r7:ATTENDED]->(m)
 RETURN *;
+```
 
+### Overview with Numerical Counts
+This query provides a high-level statistical summary of meeting-related entities:
+
+```cypher
 // Overview with correct counting syntax
 MATCH (m:Meeting)
 OPTIONAL MATCH (m)-[:HAS_ACTION]->(a:ActionItem)
@@ -87,4 +95,6 @@ RETURN m.date,
 ORDER BY m.date DESC;
 ```
 
-The first query visualizes the complete graph structure, while the second query provides a numerical overview of all connected entities for each meeting.
+The first query provides a full graph visualization, allowing users to explore the structure in detail.
+The second query summarizes the relationships numerically, helping to understand the volume of actions, decisions, topics, and attendees per meeting.
+This structured data model enables efficient querying, analysis, and insights into meeting-related interactions, making it easier to track participation, monitor action items, and analyze decision-making patterns.
