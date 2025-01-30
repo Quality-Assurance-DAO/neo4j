@@ -1,6 +1,8 @@
 
 ## Graph Data Model
 
+The graph data model represents meetings and their associated components in a structured format. Each entity within the system plays a key role in capturing essential meeting details, participant interactions, and decision-making processes.
+
 ### Nodes
 - **Meeting**: Contains meeting metadata (workgroup, date, host, topics, emotions)
 - **Person**: Represents meeting participants
@@ -13,6 +15,8 @@
 - **Emotion**: Emotional context or tone of the meeting
 
 ### Relationships
+Relationships define how the various entities within the meeting structure interact with each other. The following relationships establish meaningful connections:
+
 - `(Person)-[:ATTENDED]->(Meeting)`
 - `(Meeting)-[:HAS_DOCUMENT]->(Document)`
 - `(Meeting)-[:HAS_AGENDA_ITEM]->(AgendaItem)`
@@ -24,6 +28,8 @@
 - `(Meeting)-[:HAS_EMOTION]->(Emotion)`
 
 ## Example Queries
+The following Cypher queries help extract meaningful insights from the meeting graph:
+
 ```cypher
 // View action items with their meeting context
 MATCH (m:Meeting)-[:HAS_ACTION]->(act:ActionItem)-[:ASSIGNED_TO]->(p:Person)
