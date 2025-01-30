@@ -27,6 +27,9 @@ Relationships define how the various entities within the meeting structure inter
 ## Example Queries
 The following Cypher queries help extract meaningful insights from the meeting graph:
 
+### View Action Items with Meeting Context
+This query retrieves all action items assigned in meetings, along with details about the responsible individuals and the due dates:
+
 ```cypher
 // View action items with their meeting context
 MATCH (m:Meeting)-[:HAS_ACTION]->(act:ActionItem)-[:ASSIGNED_TO]->(p:Person)
@@ -36,6 +39,9 @@ RETURN m.date,
        p.name as assignee,
        act.dueDate,
        act.status;
+
+### Alternative View Including Agenda Items
+This query enhances the previous one by optionally including agenda items when available:
 
 // Alternative view including agenda items when available
 MATCH (m:Meeting)
