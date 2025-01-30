@@ -1,6 +1,3 @@
-
-## Graph Data Model
-
 The graph data model represents meetings and their associated components in a structured format. Each entity within the system plays a key role in capturing essential meeting details, participant interactions, and decision-making processes.
 
 ### Nodes
