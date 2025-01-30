@@ -1,6 +1,8 @@
 **Meeting Knowledge Graph: Data Model and Queries**
 
-![image](docs/image.png)
+![image](image.png)
+
+
 
 Welcome to the Meeting Knowledge Graph Wiki, a comprehensive guide to understanding and querying meeting-related data stored in a graph database. 
 
