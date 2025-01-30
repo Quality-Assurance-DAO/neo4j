@@ -108,5 +108,3 @@ ORDER BY cluster_size DESC;
    - Real-time updates
    - Action item tracking
    - Meeting connections
-
-

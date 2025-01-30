@@ -41,3 +41,56 @@
 - Action Items create a chain from Meeting through Action to Person
 - Topics and Emotions provide context and categorization
 - Documents track meeting materials and references
+
+## Graph Metrics Relationships
+
+```cypher
+// 1. Degree and Path Length
+MATCH (n)
+OPTIONAL MATCH (n)-[r]-(neighbor)
+WITH n, 
+     count(DISTINCT neighbor) as degree,
+     labels(n)[0] as nodeType
+MATCH path = (n)-[*1..3]-(connected)
+WITH n, nodeType, degree, connected, path
+RETURN 
+    nodeType,
+    CASE nodeType
+        WHEN 'Person' THEN n.name
+        WHEN 'Meeting' THEN n.workgroup
+        ELSE coalesce(n.title, n.text, '')
+    END as nodeName,
+    degree as direct_connections,
+    count(DISTINCT connected) as reachable_nodes,
+    avg(length(path)) as avg_path_length
+ORDER BY degree DESC
+LIMIT 10;
+
+// 2. Degree Distribution
+MATCH (n)
+OPTIONAL MATCH (n)-[r]-()
+WITH labels(n)[0] as nodeType,
+     count(DISTINCT r) as degree
+RETURN 
+    nodeType,
+    degree as connectivity,
+    count(*) as node_count
+ORDER BY nodeType, degree;
+
+// 3. Clustering Analysis
+MATCH (n)-[r1]-(neighbor)
+WITH n, 
+     collect(DISTINCT neighbor) as neighbors,
+     count(DISTINCT neighbor) as degree
+WHERE degree > 1
+MATCH (n1)-[r2]-(n2)
+WHERE n1 IN neighbors 
+AND n2 IN neighbors
+AND id(n1) < id(n2)
+RETURN 
+    labels(n)[0] as nodeType,
+    degree as node_degree,
+    count(*) as neighbor_connections,
+    (2.0 * count(*)) / (degree * (degree - 1)) as clustering_coefficient
+ORDER BY clustering_coefficient DESC;
+```
